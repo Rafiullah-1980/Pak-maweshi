@@ -74,6 +74,10 @@ nav button span{font-size:1.9rem;line-height:1.25}
 .sp{flex:0 0 250px;background:var(--card);border:2px solid var(--sun);border-radius:14px;padding:12px;display:block;color:var(--tx);text-decoration:none}
 .sp b{display:block;font-size:1.05rem}.sp small{color:var(--mu)}.sp.me{border-style:dashed;text-align:center;cursor:pointer;font:inherit}
 .sp img{width:100%;height:120px;object-fit:cover;border-radius:10px;margin-bottom:6px}
+#sp .sp{display:none;flex:none;width:100%}#sp .sp.on{display:block;animation:spf .5s}#sp .sp img{height:150px}
+@keyframes spf{from{opacity:0}to{opacity:1}}
+.dots{display:flex;justify-content:center;gap:6px;margin-top:6px}.dots i{width:7px;height:7px;border-radius:50%;background:var(--ln)}.dots i.on{background:var(--sun)}
+.spme{width:100%;margin-top:8px;padding:6px 10px;border:1px dashed var(--sun);border-radius:10px;background:none;color:var(--tx);font:inherit;font-size:.85rem;cursor:pointer}
 </style>
 </head>
 <body>
@@ -89,7 +93,7 @@ nav button span{font-size:1.9rem;line-height:1.25}
 <h2>جانور کے لحاظ سے دیکھیں</h2>
 <div class="chips" id="chips"></div>
 <button class="btn alt" id="premTop" style="width:100%;margin-top:14px">⭐ پریمیم اکاؤنٹ: اپنے اشتہار سب سے اوپر دکھائیں</button>
-<div id="spBox"><h2>📢 اسپانسرڈ اشتہارات</h2><div class="feat" id="sp"></div></div>
+<div id="spBox" style="margin-top:12px"><div id="sp"></div><button class="spme" id="spBuy">📢 اپنا اشتہار لگائیں: 7 دن 300 · 15 دن 500 · 30 دن 1000 روپے</button></div>
 <div id="featBox" style="display:none"><h2>⭐ نمایاں جانور</h2><div class="feat" id="feat"></div></div>
 <div class="fl">
 <div><label>صوبہ / علاقہ</label><select id="fprov"></select></div>
@@ -282,10 +286,15 @@ $("#hdAuth").textContent=user?"سائن آؤٹ":"سائن اِن";
 $("#prof").innerHTML=user?`<h2 style="margin:0">خوش آمدید ${esc(user.user_metadata?.name||"")}</h2><div dir="ltr" style="text-align:right">${esc(user.email)}</div><div class="acts"><button class="btn ghost" id="outBtn">سائن آؤٹ</button></div>`
 :`<h2 style="margin:0">پروفائل</h2><div>مویشی بیچنے یا خریدنے کے لیے سائن اِن کریں</div><div class="acts"><button class="btn alt" data-auth="up">سائن اپ</button><button class="btn ghost" data-auth="in">سائن اِن</button></div>`}
 paintUser=(f=>()=>{f();refreshPremium()})(paintUser);
+let spT=null;
 async function loadSp(){let rows=[];try{const {data}=await sb.from("banners").select("*").gt("until",new Date().toISOString()).order("created_at",{ascending:false}).limit(10);rows=data||[]}catch(e){}
-const ok=u=>/^https?:\/\//.test(u||"");
-$("#sp").innerHTML=rows.map(b=>(ok(b.link)?'<a class="sp" target="_blank" rel="noopener" href="'+esc(b.link)+'">':'<div class="sp">')+''+(/^https:\/\//.test(b.image||"")?'<img src="'+esc(b.image)+'" alt="">':"")+'<small>اسپانسرڈ</small><b>'+esc(b.title)+'</b><span>'+esc(b.text||"")+'</span>'+(ok(b.link)?'</a>':'</div>')).join("")
-+'<button class="sp me" id="spBuy"><b>📢 آپ کا اشتہار یہاں</b><span>7 دن: 300 روپے<br>15 دن: 500 روپے<br>30 دن: 1000 روپے<br>واٹس ایپ پر رابطہ کریں۔</span></button>'}
+const ok=u=>/^https?:\/\//.test(u||""),box=$("#sp");
+box.innerHTML=rows.map((b,i)=>{const im=/^https:\/\//.test(b.image||"")?'<img src="'+esc(b.image)+'" alt="">':"",c='sp'+(i?'':' on'),t=im+'<small>اسپانسرڈ</small><b>'+esc(b.title)+'</b><span>'+esc(b.text||"")+'</span>';
+return ok(b.link)?'<a class="'+c+'" target="_blank" rel="noopener" href="'+esc(b.link)+'">'+t+'</a>':'<div class="'+c+'">'+t+'</div>'}).join("")
++(rows.length>1?'<div class="dots">'+rows.map((_,i)=>'<i class="'+(i?'':'on')+'"></i>').join("")+'</div>':"");
+clearInterval(spT);
+if(rows.length>1){let n=0;const sl=box.querySelectorAll(".sp"),ds=box.querySelectorAll(".dots i");
+spT=setInterval(()=>{sl[n].classList.remove("on");ds[n].classList.remove("on");n=(n+1)%sl.length;sl[n].classList.add("on");ds[n].classList.add("on")},4000)}}
 document.addEventListener("click",e=>{if(e.target.closest("#spBuy"))window.open("https://wa.me/"+CONF.whatsapp+"?text="+encodeURIComponent("پاک مویشی پر بینر اشتہار لگوانا ہے۔ ریٹ: 7 دن 300، 15 دن 500، 30 دن 1000 روپے۔ ادائیگی کا طریقہ بتائیں۔"),"_blank")});
 async function loadFeat(){const {data}=await sb.from("ads").select("*").eq("featured",true).order("created_at",{ascending:false}).limit(10);feat=data||[];$("#featBox").style.display=feat.length?"block":"none";$("#feat").innerHTML=feat.map(a=>card(a)).join("")}
 async function refreshPremium(){premium=false;if(user){const {data}=await sb.from("premium_users").select("until").eq("user_id",user.id).gt("until",new Date().toISOString());premium=!!(data&&data.length)}paintPrem()}
