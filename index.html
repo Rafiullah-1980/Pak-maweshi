@@ -45,7 +45,7 @@ select,input,textarea{width:100%;font:inherit;padding:9px 10px;border:1px solid 
 .mt{color:var(--mu);font-size:.85rem}
 .empty{text-align:center;color:var(--mu);padding:30px 0}
 nav{position:fixed;inset:auto 0 0 0;background:var(--card);border-top:1px solid var(--ln);display:flex;justify-content:space-around;align-items:flex-end;padding:8px 0 12px;z-index:5}
-nav button{background:none;border:0;font:inherit;font-size:1.05rem;color:var(--mu);display:flex;flex-direction:column;align-items:center;min-width:72px;cursor:pointer}
+nav button{background:none;border:0;font:inherit;font-size:.95rem;white-space:nowrap;color:var(--mu);display:flex;flex-direction:column;align-items:center;min-width:72px;cursor:pointer}
 nav button.on{color:var(--g2);font-weight:700}
 nav .sell{width:70px;height:70px;border-radius:50%;background:var(--sun);color:#222;font-size:2.6rem;line-height:1;margin-top:-32px;justify-content:center;font-weight:700}
 .modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:9}
@@ -73,6 +73,7 @@ nav .sell{width:70px;height:70px;border-radius:50%;background:var(--sun);color:#
 nav button span{font-size:1.9rem;line-height:1.25}
 .sp{flex:0 0 250px;background:var(--card);border:2px solid var(--sun);border-radius:14px;padding:12px;display:block;color:var(--tx);text-decoration:none}
 .sp b{display:block;font-size:1.05rem}.sp small{color:var(--mu)}.sp.me{border-style:dashed;text-align:center;cursor:pointer;font:inherit}
+.sp img{width:100%;height:120px;object-fit:cover;border-radius:10px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -283,7 +284,7 @@ $("#prof").innerHTML=user?`<h2 style="margin:0">خوش آمدید ${esc(user.use
 paintUser=(f=>()=>{f();refreshPremium()})(paintUser);
 async function loadSp(){let rows=[];try{const {data}=await sb.from("banners").select("*").gt("until",new Date().toISOString()).order("created_at",{ascending:false}).limit(10);rows=data||[]}catch(e){}
 const ok=u=>/^https?:\/\//.test(u||"");
-$("#sp").innerHTML=rows.map(b=>(ok(b.link)?'<a class="sp" target="_blank" rel="noopener" href="'+esc(b.link)+'">':'<div class="sp">')+'<small>اسپانسرڈ</small><b>'+esc(b.title)+'</b><span>'+esc(b.text||"")+'</span>'+(ok(b.link)?'</a>':'</div>')).join("")
+$("#sp").innerHTML=rows.map(b=>(ok(b.link)?'<a class="sp" target="_blank" rel="noopener" href="'+esc(b.link)+'">':'<div class="sp">')+''+(/^https:\/\//.test(b.image||"")?'<img src="'+esc(b.image)+'" alt="">':"")+'<small>اسپانسرڈ</small><b>'+esc(b.title)+'</b><span>'+esc(b.text||"")+'</span>'+(ok(b.link)?'</a>':'</div>')).join("")
 +'<button class="sp me" id="spBuy"><b>📢 آپ کا اشتہار یہاں</b><span>7 دن: 300 روپے<br>15 دن: 500 روپے<br>30 دن: 1000 روپے<br>واٹس ایپ پر رابطہ کریں۔</span></button>'}
 document.addEventListener("click",e=>{if(e.target.closest("#spBuy"))window.open("https://wa.me/"+CONF.whatsapp+"?text="+encodeURIComponent("پاک مویشی پر بینر اشتہار لگوانا ہے۔ ریٹ: 7 دن 300، 15 دن 500، 30 دن 1000 روپے۔ ادائیگی کا طریقہ بتائیں۔"),"_blank")});
 async function loadFeat(){const {data}=await sb.from("ads").select("*").eq("featured",true).order("created_at",{ascending:false}).limit(10);feat=data||[];$("#featBox").style.display=feat.length?"block":"none";$("#feat").innerHTML=feat.map(a=>card(a)).join("")}

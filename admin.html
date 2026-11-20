@@ -66,6 +66,7 @@ input[type=email],input[type=password]{direction:ltr;text-align:left}
     <label>عنوان</label><input id="bt">
     <label>تفصیل (مختصر)</label><input id="bx">
     <label>لنک (اختیاری، https:// سے شروع)</label><input id="bl" dir="ltr" style="text-align:left">
+    <label>تصویر (اختیاری)</label><input type="file" id="bi" accept="image/*">
     <label>کتنے دن</label><select id="bd"><option value="7">7 دن (300 روپے)</option><option value="15">15 دن (500 روپے)</option><option value="30">30 دن (1000 روپے)</option></select>
     <button class="btn" id="bgo">شامل کریں</button><div class="msg" id="bm"></div>
     <div id="blist" style="margin-top:12px"></div>
@@ -146,8 +147,14 @@ $("#list").onclick=e=>{
 async function loadB(){const {data,error}=await sb.rpc("banner_list");const b=$("#blist");if(error){b.textContent="";return}
 b.innerHTML=data.map(r=>'<div class="row"><div class="em" style="direction:rtl;text-align:right">'+esc(r.title)+'</div><div class="dt">'+fmtDate(r.until)+'</div><button class="sm" data-bd="'+r.id+'">حذف</button></div>').join("")||"ابھی کوئی بینر نہیں۔"}
 $("#bgo").onclick=async()=>{const t=$("#bt").value.trim();if(!t)return say($("#bm"),"عنوان لکھیں۔",false);
-const {error}=await sb.rpc("banner_add",{p_title:t,p_text:$("#bx").value.trim(),p_link:$("#bl").value.trim(),p_days:+$("#bd").value});
-if(error)return say($("#bm"),errText(error),false);say($("#bm"),"بینر لگ گیا۔",true);$("#bt").value=$("#bx").value=$("#bl").value="";loadB()};
+const gb=$("#bgo");gb.disabled=true;let img=null;
+try{const f=$("#bi").files[0];if(f){say($("#bm"),"تصویر اپلوڈ ہو رہی ہے…",true);const {data:{session}}=await sb.auth.getSession();const p=session.user.id+"/banner-"+Date.now()+".jpg";
+const {error:ue}=await sb.storage.from("ad-images").upload(p,await shrink(f),{contentType:"image/jpeg"});if(ue)throw ue;img=sb.storage.from("ad-images").getPublicUrl(p).data.publicUrl}}
+catch(x){gb.disabled=false;return say($("#bm"),"تصویر اپلوڈ نہیں ہو سکی: "+(x.message||""),false)}
+const {error}=await sb.rpc("banner_add",{p_title:t,p_text:$("#bx").value.trim(),p_link:$("#bl").value.trim(),p_days:+$("#bd").value,p_image:img});
+gb.disabled=false;
+if(error)return say($("#bm"),errText(error),false);say($("#bm"),"بینر لگ گیا۔",true);$("#bt").value=$("#bx").value=$("#bl").value="";$("#bi").value="";loadB()};
+function shrink(f){return new Promise((ok,no)=>{const i=new Image,u=URL.createObjectURL(f);i.onload=()=>{const r=Math.min(1,1000/Math.max(i.width,i.height));const c=document.createElement("canvas");c.width=Math.round(i.width*r);c.height=Math.round(i.height*r);c.getContext("2d").drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?ok(b):no(new Error("تصویر")),"image/jpeg",.82)};i.onerror=()=>no(new Error("تصویر کھل نہیں سکی"));i.src=u})}
 $("#blist").onclick=async e=>{const b=e.target.closest("[data-bd]");if(b&&confirm("یہ بینر حذف کریں؟")){await sb.rpc("banner_delete",{p_id:+b.dataset.bd});loadB()}};
 start();
 </script>
