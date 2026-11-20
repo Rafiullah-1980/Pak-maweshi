@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ایڈمن | پاک مویشی</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&display=swap">
+<style>
+:root{--g:#14532d;--g2:#1f7a45;--bg:#f3f5f1;--card:#fff;--tx:#1b2a20;--mu:#667a6c;--ln:#dfe5dc;--red:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#101712;--card:#18231b;--tx:#e8efe9;--mu:#9bb0a1;--ln:#283a2d}}
+*{box-sizing:border-box;margin:0}
+body{font-family:"Noto Naskh Arabic",Tahoma,sans-serif;background:var(--bg);color:var(--tx);line-height:1.7;padding-bottom:40px}
+.hd{background:var(--g);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.hd b{font-size:1.2rem}
+.hd button{background:none;border:1px solid #fff8;color:#fff;border-radius:8px;padding:4px 12px;font:inherit;cursor:pointer}
+.wrap{max-width:640px;margin:auto;padding:0 14px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:16px;margin-top:16px}
+h2{font-size:1.1rem;margin-bottom:10px}
+label{display:block;font-size:.9rem;color:var(--mu);margin-top:10px}
+input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}
+input[type=email],input[type=password]{direction:ltr;text-align:left}
+.btn{width:100%;margin-top:14px;padding:12px;border:0;border-radius:10px;background:var(--g2);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.btn:disabled{opacity:.6}
+.msg{margin-top:12px;padding:10px;border-radius:10px;display:none}
+.msg.ok{display:block;background:#1f7a4522;color:var(--g2)}
+.msg.er{display:block;background:#b3261e22;color:var(--red)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--ln)}
+.row:last-child{border:0}
+.em{direction:ltr;text-align:left;font-size:.9rem;word-break:break-all;flex:1}
+.dt{font-size:.8rem;color:var(--mu);white-space:nowrap}
+.dt.old{color:var(--red)}
+.sm{padding:4px 10px;border:1px solid var(--g2);color:var(--g2);background:none;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="hd"><b>⭐ ایڈمن: پریمیم</b><button id="out" class="hide">لاگ آؤٹ</button></div>
+<div class="wrap">
+
+<div class="card hide" id="login">
+  <h2>ایڈمن لاگ اِن</h2>
+  <label>ای میل</label><input type="email" id="le" autocomplete="username">
+  <label>پاس ورڈ</label><input type="password" id="lp" autocomplete="current-password">
+  <button class="btn" id="lgo">لاگ اِن</button>
+  <div class="msg" id="lm"></div>
+</div>
+
+<div class="hide" id="panel">
+  <div class="card">
+    <h2>پریمیم دیں یا تجدید کریں</h2>
+    <label>صارف کی ای میل (جس سے اس نے سائٹ پر سائن اپ کیا)</label>
+    <input type="email" id="te" autocomplete="off">
+    <label>مدت</label>
+    <select id="tm">
+      <option value="1">1 ماہ (500 روپے)</option>
+      <option value="3">3 ماہ</option>
+      <option value="6">6 ماہ</option>
+      <option value="12">12 ماہ</option>
+    </select>
+    <button class="btn" id="go">پریمیم کریں</button>
+    <div class="msg" id="pm"></div>
+  </div>
+  <div class="card">
+    <h2>پریمیم صارفین</h2>
+    <div id="list">...</div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sb=supabase.createClient(CFG.url,CFG.key);
+
+function say(el,t,ok){el.className="msg "+(ok?"ok":"er");el.textContent=t}
+function errText(e){
+  const m=(e&&e.message)||"";
+  if(m.includes("not allowed"))return "آپ کو اس صفحے کی اجازت نہیں۔ یہ صرف ایڈمن کی ای میل کے لیے ہے۔";
+  if(m.includes("user not found"))return "اس ای میل سے سائٹ پر کوئی اکاؤنٹ نہیں ملا۔ صارف سے کہیں کہ پہلے اسی ای میل سے سائن اپ کرے۔";
+  return "خرابی: "+m;
+}
+function fmtDate(d){return new Date(d).toLocaleDateString("en-GB")}
+
+async function start(){
+  const {data}=await sb.auth.getSession();
+  if(!data.session){$("#login").classList.remove("hide");$("#panel").classList.add("hide");$("#out").classList.add("hide");return}
+  $("#login").classList.add("hide");$("#panel").classList.remove("hide");$("#out").classList.remove("hide");
+  loadList();
+}
+
+async function loadList(){
+  const box=$("#list");
+  const {data,error}=await sb.rpc("premium_list");
+  if(error){box.innerHTML='<div class="msg er">'+esc(errText(error))+'</div>';return}
+  if(!data.length){box.textContent="ابھی کوئی پریمیم صارف نہیں۔";return}
+  box.innerHTML=data.map(r=>{
+    const left=Math.ceil((new Date(r.until)-Date.now())/864e5);
+    const old=left<=0;
+    return '<div class="row"><div class="em">'+esc(r.email)+'</div>'
+      +'<div class="dt'+(old?' old':'')+'">'+(old?'ختم ':'')+fmtDate(r.until)+(old?'':' ('+left+' دن)')+'</div>'
+      +'<button class="sm" data-em="'+esc(r.email)+'">تجدید</button></div>';
+  }).join("");
+}
+
+$("#lgo").onclick=async()=>{
+  const b=$("#lgo");b.disabled=true;
+  const {error}=await sb.auth.signInWithPassword({email:$("#le").value.trim(),password:$("#lp").value});
+  b.disabled=false;
+  if(error)return say($("#lm"),"ای میل یا پاس ورڈ غلط ہے۔",false);
+  start();
+};
+$("#out").onclick=async()=>{await sb.auth.signOut();start()};
+
+$("#go").onclick=async()=>{
+  const em=$("#te").value.trim();
+  if(!em)return say($("#pm"),"پہلے صارف کی ای میل لکھیں۔",false);
+  const months=+$("#tm").value;
+  if(!confirm(em+" کو "+months+" ماہ کا پریمیم دینا ہے؟"))return;
+  const b=$("#go");b.disabled=true;
+  const {data,error}=await sb.rpc("make_premium",{target_email:em,months});
+  b.disabled=false;
+  if(error)return say($("#pm"),errText(error),false);
+  say($("#pm"),"ہو گیا۔ پریمیم "+fmtDate(data)+" تک ہے۔",true);
+  $("#te").value="";
+  loadList();
+};
+
+$("#list").onclick=e=>{
+  const b=e.target.closest("[data-em]");
+  if(b){$("#te").value=b.dataset.em;window.scrollTo({top:0,behavior:"smooth"})}
+};
+
+start();
+</script>
+</body>
+</html>
