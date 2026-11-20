@@ -319,7 +319,7 @@ urls.push(sb.storage.from("ad-images").getPublicUrl(path).data.publicUrl)}
 const {error}=await sb.from("ads").insert({animal:$("#sa").value,title:$("#st").value.trim(),price:+$("#sp").value,province:$("#sprov").value,city:$("#sc").value,age:$("#sg").value.trim(),weight:+$("#sw").value||null,phone:phone,descr:$("#sd").value.trim(),images:urls});
 if(error)throw error;
 $("#form").reset();files=[];$("#thumbs").innerHTML="";cityFor("#sprov","#sc");closeAll();load();loadFeat();go("mine")
-}catch(err){msg($("#sMsg"),String(err&&err.message).includes("daily_limit")?"آج کے لیے اشتہاروں کی حد پوری ہو گئی۔ کل دوبارہ لگائیں، یا زیادہ اشتہاروں کے لیے پریمیم اکاؤنٹ لیں۔":"اشتہار نہیں لگ سکا۔ تصویر یا انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔")}
+}catch(err){msg($("#sMsg"),String(err&&err.message).includes("daily_limit")?"آج کے لیے اشتہاروں کی حد پوری ہو گئی۔ کل دوبارہ لگائیں، یا زیادہ اشتہاروں کے لیے پریمیم اکاؤنٹ لیں۔":"اشتہار نہیں لگ سکا۔ تصویر یا انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔ [تکنیکی وجہ: "+((err&&err.message)||err)+"]");console.error(err)}
 btn.disabled=false};
 
 /* کلکس */
