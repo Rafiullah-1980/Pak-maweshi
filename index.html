@@ -296,7 +296,13 @@ clearInterval(spT);
 if(rows.length>1){let n=0;const sl=box.querySelectorAll(".sp"),ds=box.querySelectorAll(".dots i");
 spT=setInterval(()=>{sl[n].classList.remove("on");ds[n].classList.remove("on");n=(n+1)%sl.length;sl[n].classList.add("on");ds[n].classList.add("on")},4000)}}
 document.addEventListener("click",e=>{if(e.target.closest("#spBuy"))window.open("https://wa.me/"+CONF.whatsapp+"?text="+encodeURIComponent("پاک مویشی پر بینر اشتہار لگوانا ہے۔ ریٹ: 7 دن 300، 15 دن 500، 30 دن 1000 روپے۔ ادائیگی کا طریقہ بتائیں۔"),"_blank")});
-async function loadFeat(){const {data}=await sb.from("ads").select("*").eq("featured",true).order("created_at",{ascending:false}).limit(10);feat=data||[];$("#featBox").style.display=feat.length?"block":"none";$("#feat").innerHTML=feat.map(a=>card(a)).join("")}
+let ftT=null,ftPause=0;
+function featRun(){const el=$("#feat");clearInterval(ftT);if(!el||feat.length<2)return;
+const hold=()=>{ftPause=Date.now()+8000};el.addEventListener("touchstart",hold,{passive:true});el.addEventListener("mousedown",hold);
+ftT=setInterval(()=>{if(Date.now()<ftPause||document.hidden)return;const mx=el.scrollWidth-el.clientWidth;if(mx<=4)return;
+const c=el.firstElementChild,st=c.offsetWidth+12,p=Math.abs(el.scrollLeft),d=getComputedStyle(el).direction=="rtl"?-1:1;
+el.scrollTo({left:d*(p+st>mx-4?(p>=mx-4?0:mx):p+st),behavior:"smooth"})},3000)}
+async function loadFeat(){const {data}=await sb.from("ads").select("*").eq("featured",true).order("created_at",{ascending:false}).limit(10);feat=data||[];$("#featBox").style.display=feat.length?"block":"none";$("#feat").innerHTML=feat.map(a=>card(a)).join("");featRun()}
 async function refreshPremium(){premium=false;if(user){const {data}=await sb.from("premium_users").select("until").eq("user_id",user.id).gt("until",new Date().toISOString());premium=!!(data&&data.length)}paintPrem()}
 function paintPrem(){
 const perks='<ul><li>آپ کے اشتہار ہوم پیج پر سب سے اوپر "نمایاں جانور" میں دکھیں گے</li><li>ہر اشتہار پر ⭐ نمایاں کا نشان</li><li>زیادہ خریداروں تک رسائی</li></ul>';
