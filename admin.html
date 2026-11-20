@@ -62,6 +62,15 @@ input[type=email],input[type=password]{direction:ltr;text-align:left}
     <div class="msg" id="pm"></div>
   </div>
   <div class="card">
+    <h2>📢 بینر اشتہار شامل کریں</h2>
+    <label>عنوان</label><input id="bt">
+    <label>تفصیل (مختصر)</label><input id="bx">
+    <label>لنک (اختیاری، https:// سے شروع)</label><input id="bl" dir="ltr" style="text-align:left">
+    <label>کتنے دن</label><select id="bd"><option value="7">7 دن (300 روپے)</option><option value="15">15 دن (500 روپے)</option><option value="30">30 دن (1000 روپے)</option></select>
+    <button class="btn" id="bgo">شامل کریں</button><div class="msg" id="bm"></div>
+    <div id="blist" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
     <h2>پریمیم صارفین</h2>
     <div id="list">...</div>
   </div>
@@ -89,7 +98,7 @@ async function start(){
   const {data}=await sb.auth.getSession();
   if(!data.session){$("#login").classList.remove("hide");$("#panel").classList.add("hide");$("#out").classList.add("hide");return}
   $("#login").classList.add("hide");$("#panel").classList.remove("hide");$("#out").classList.remove("hide");
-  loadList();
+  loadList();loadB();
 }
 
 async function loadList(){
@@ -126,7 +135,7 @@ $("#go").onclick=async()=>{
   if(error)return say($("#pm"),errText(error),false);
   say($("#pm"),"ہو گیا۔ پریمیم "+fmtDate(data)+" تک ہے۔",true);
   $("#te").value="";
-  loadList();
+  loadList();loadB();
 };
 
 $("#list").onclick=e=>{
@@ -134,6 +143,12 @@ $("#list").onclick=e=>{
   if(b){$("#te").value=b.dataset.em;window.scrollTo({top:0,behavior:"smooth"})}
 };
 
+async function loadB(){const {data,error}=await sb.rpc("banner_list");const b=$("#blist");if(error){b.textContent="";return}
+b.innerHTML=data.map(r=>'<div class="row"><div class="em" style="direction:rtl;text-align:right">'+esc(r.title)+'</div><div class="dt">'+fmtDate(r.until)+'</div><button class="sm" data-bd="'+r.id+'">حذف</button></div>').join("")||"ابھی کوئی بینر نہیں۔"}
+$("#bgo").onclick=async()=>{const t=$("#bt").value.trim();if(!t)return say($("#bm"),"عنوان لکھیں۔",false);
+const {error}=await sb.rpc("banner_add",{p_title:t,p_text:$("#bx").value.trim(),p_link:$("#bl").value.trim(),p_days:+$("#bd").value});
+if(error)return say($("#bm"),errText(error),false);say($("#bm"),"بینر لگ گیا۔",true);$("#bt").value=$("#bx").value=$("#bl").value="";loadB()};
+$("#blist").onclick=async e=>{const b=e.target.closest("[data-bd]");if(b&&confirm("یہ بینر حذف کریں؟")){await sb.rpc("banner_delete",{p_id:+b.dataset.bd});loadB()}};
 start();
 </script>
 </body>
